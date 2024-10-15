@@ -1,12 +1,15 @@
-# Pintos
-This repo contains skeleton code for undergraduate Operating System course honor track at Peking University. 
+# Descriptions for this Repository
 
-[Pintos](http://pintos-os.org) is a teaching operating system for 32-bit x86, challenging but not overwhelming, small
-but realistic enough to understand OS in depth (it can run on x86 machine and simulators 
-including QEMU, Bochs and VMWare Player!). The main source code, documentation and assignments 
-are developed by Ben Pfaff and others from Stanford (refer to its [LICENSE](./LICENSE)).
+## Introduction
 
-## Acknowledgement
-This source code is adapted from professor ([Ryan Huang](huang@cs.jhu.edu)) at JHU, who also taught a similar undergraduate OS course. He made some changes to the original
-Pintos labs (add lab0 and fix some bugs for MacOS). For students in PKU, please
-download the release version skeleton code by `git clone git@github.com:PKU-OS/pintos.git`.
+这个仓库展示了华东师范大学（ECNU）王海生（学号：10235101559）在2024-2025学年秋季张民老师“操作系统”及“操作系统实践”课程上使用的资料。
+
+## PintOS
+
+PintOS系统的代码来自[这里](https://github.com/PKU-OS/pintos)；安装有PintOS完整运行环境和依赖的Docker镜像来自`pkuflyingpig`。
+
+完成相关的任务后，将在`pintos`目录中不断更新代码。
+
+## Homework
+
+“操作系统”课程的作业，以及“操作系统实践”课程的实验报告，存储在`Homework`目录中。
