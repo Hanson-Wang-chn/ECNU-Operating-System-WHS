@@ -216,11 +216,10 @@ list_push_front (struct list *list, struct list_elem *elem)
 
 void
 list_push_back (struct list *list, struct list_elem *elem)
+// 把FIFO的队列修改为优先队列
 {
   list_insert (list_end (list), elem);
 }
-
-// 需要修改这里的数据结构，把FIFO的队列修改为优先队列
 
 // bool
 // list_less_func(struct list_elem *elem_i, struct list_elem *elem_o, void *aux)

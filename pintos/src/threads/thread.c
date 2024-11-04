@@ -820,10 +820,11 @@ thread_block (void)
 //     }
 //     return list_insert(e,elem);
 // }
-bool prio_cmp_fun(struct list_elem *elem_i,struct list_elem *elem_o,void *add_debug_prefix_map){
-struct thread *thread_i=list_entry(elem_i,struct thread,elem);
-struct thread *thread_o=list_entry(elem_o,struct thread,elem);
-return thread_i->priority>thread_o->priority;
+bool
+prio_cmp_fun(struct list_elem *elem_i,struct list_elem *elem_o,void *add_debug_prefix_map){
+  struct thread *thread_i=list_entry(elem_i,struct thread,elem);
+  struct thread *thread_o=list_entry(elem_o,struct thread,elem);
+  return thread_i->priority>thread_o->priority;
 }
 /** Transitions a blocked thread T to the ready-to-run state.
    This is an error if T is not blocked.  (Use thread_yield() to
