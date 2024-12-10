@@ -1,0 +1,354 @@
+\documentclass{article}
+\usepackage{fancyhdr}
+\usepackage{ctex}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage[a4paper, body={18cm,22cm}]{geometry}
+\usepackage{amsmath,amssymb,amstext,wasysym,enumerate,graphicx}
+\usepackage{float,abstract,booktabs,indentfirst,amsmath}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{diagbox}
+\renewcommand\arraystretch{1.4}
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+\usepackage{enumitem}
+\setmonofont{Consolas}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{makecell}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
+\setCJKmonofont{黑体}
+\lstset{  
+	% 基本设置  
+	xleftmargin = 3em, xrightmargin = 3em, aboveskip = 1em,  
+	backgroundcolor = \color{white},  
+	basicstyle = \small\ttfamily,  
+	rulesepcolor = \color{gray},  
+	breaklines = true,  
+	numbers = left,  
+	numberstyle = \small,  
+	numbersep = -14pt,  
+	frame = shadowbox,  
+	showspaces = false,  
+	columns = fixed,  
+	sensitive = true,  
+	% VSCode 风格配色  
+	keywordstyle = \color{blue!70!black}\bfseries,  
+	emphstyle = \color{red!70!black}\bfseries, % 对于强调的词  
+	emphstyle=[2]\color{purple!70!black}\bfseries, % 对于第二组强调的词  
+	commentstyle = \color{green!60!black}, % 注释颜色  
+	stringstyle = \color{orange!90!black}, % 字符串颜色更亮一些  
+	morekeywords={ASSERT, int64\_t, uint32\_t},  
+	moreemph={ASSERT, NULL},  
+	moreemph=[2]{int64\_t, uint32\_t, tid\_t, uint8\_t, int16\_t, uint16\_t, int32\_t, size\_t, bool},  
+	morecomment=[l][\color{green!60!black}]{+}, % 以+开头的注释  
+}
+
+%--------------------页眉--------------------%
+\pagestyle{fancy}
+\fancyhead[L]{}
+\fancyhead[R]{}
+\fancyhead[C]{华东师范大学软件工程学院}
+\fancyfoot[C]{-\thepage-}
+\renewcommand{\headrulewidth}{1.5pt}
+%--------------------标题--------------------%
+\begin{document}
+\begin{center}
+	{\Large{\textbf{\heiti 第四次作业：死锁}}}
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{p{2cm}p{4cm}<{\centering}p{1cm}p{2cm}p{6cm}<{\centering}}
+			课程名称:    & 操作系统 & \quad & 指导教师:    & 张民
+			\\ \cline{2-2} \cline{5-5}
+			姓\qquad 名: & 王海生    & \quad & 学\qquad 号: & 10235101559         \\ \cline{2-2} \cline{5-5}
+		\end{tabular}
+	\end{table}
+	
+	% 添加新行并居中
+	%\vspace{1em} % 可选：添加垂直间距
+\end{center}
+\rule{\textwidth}{1pt}
+
+\tableofcontents
+
+%--------------------正文--------------------%
+\section{问题7.7}
+
+\subsection{题目}
+
+假设一个系统有 4 个相同类型的资源，并由 3 个进程共享。每个进程最多需要 2 个资源。证明这个系统不会死锁。
+
+\subsection{解答}
+
+假设系统有 4 个相同类型的资源，且由 3 个进程共享。每个进程最多需要 2 个资源。我们可以设这 3 个进程为 P1、P2 和 P3，每个进程的最大资源需求为 2 个，系统总共有 4 个资源。在任意情况下，无论进程的执行顺序如何，都能够保证每个进程请求的资源数（2 个）始终小于或等于当前可用资源与之前进程已占用资源的和。因为每个进程最多占用 2 个资源，总资源数为 4，这意味着在任何时刻，总会有足够的资源保证至少一个进程能够完成其操作，并释放资源供其他进程使用。因此，系统始终处于安全状态，必然不会发生死锁。
+
+\section{问题7.12}
+
+\subsection{题目}
+
+假设一个系统具有如下的快照：
+
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+		\hline
+		& \multicolumn{4}{|c|}{Allocation} & \multicolumn{4}{|c|}{Max} \\
+		\cline{2-9}
+		& A & B & C & D & A & B & C & D \\
+		\hline
+		$P_0$ & 3 & 0 & 1 & 4 & 5 & 1 & 1 & 7 \\
+		\hline
+		$P_1$ & 2 & 2 & 1 & 0 & 3 & 2 & 1 & 1 \\
+		\hline
+		$P_2$ & 3 & 1 & 2 & 1 & 3 & 3 & 2 & 1 \\
+		\hline
+		$P_3$ & 0 & 5 & 1 & 0 & 4 & 6 & 1 & 2 \\
+		\hline
+		$P_4$ & 4 & 2 & 1 & 2 & 6 & 3 & 2 & 5 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+采用银行家算法，确定如下每个状态是否安全的。如果状态是安全的，那么说明进程可以完成的顺序。否则，说明为什么状态是不安全的。
+
+a. Available = (0, 3, 0, 1)
+
+b. Available = (1, 0, 0, 2)
+
+\subsection{解答}
+
+根据所学的知识：
+
+\[
+\text{need} = \text{max} - \text{allocation}
+\]
+
+\[
+\text{need} = 
+\begin{pmatrix}
+	2 & 2 & 1 & 1 \\
+	2 & 1 & 3 & 1 \\
+	0 & 2 & 1 & 3 \\
+	0 & 1 & 1 & 2
+\end{pmatrix}
+\]
+
+\subsubsection{a小问}
+
+\begin{enumerate}
+	\item 
+	计算需求矩阵（need = max - allocation）：
+	
+	$$
+	\begin{array}{|c|c|c|c|c|}
+		\hline
+		& A & B & C & D \\
+		\hline
+		P_0 & 2 & 1 & 0 & 3 \\
+		\hline
+		P_1 & 1 & 0 & 0 & 1 \\
+		\hline
+		P_2 & 0 & 2 & 0 & 0 \\
+		\hline
+		P_3 & 4 & 1 & 0 & 2 \\
+		\hline
+		P_4 & 2 & 1 & 1 & 3 \\
+		\hline
+	\end{array}
+	$$
+	
+	\item
+	初始化 \texttt{work = available = (0, 3, 0, 1)}，\texttt{finish = (0, 0, 0, 0, 0)}，表示所有进程都未完成。
+	
+	\item 
+	依次检查进程是否能完成：
+	
+	\begin{enumerate}
+		\item 第一步：检查进程 $P_2$，其需求为 $(0, 2, 0, 0)$，满足 \texttt{need[i] <= work}，即 $(0, 2, 0, 0) \leq (0, 3, 0, 1)$，因此可以完成 $P_2$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[2] = (0, 3, 0, 1) + (3, 1, 2, 1) = (3, 4, 2, 2)}，更新 \texttt{finish = (0, 0, 1, 0, 0)}。
+		\end{itemize}
+		
+		\item 第二步：检查进程 $P_1$，其需求为 $(1, 0, 0, 1)$，满足 \texttt{need[i] <= work}，即 $(1, 0, 0, 1) \leq (3, 4, 2, 2)$，因此可以完成 $P_1$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[1] = (3, 4, 2, 2) + (2, 2, 1, 0) = (5, 6, 3, 2)}，更新 \texttt{finish = (0, 1, 1, 0, 0)}。
+		\end{itemize}
+		
+		\item 第三步：检查进程 $P_3$，其需求为 $(4, 1, 0, 2)$，满足 \texttt{need[i] <= work}，即 $(4, 1, 0, 2) \leq (5, 6, 3, 2)$，因此可以完成 $P_3$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[3] = (5, 6, 3, 2) + (0, 5, 1, 0) = (5, 11, 4, 2)}，更新 \texttt{finish = (0, 1, 1, 1, 0)}。
+		\end{itemize}
+		
+		\item 第四步：检查进程 $P_0$，其需求为 $(2, 1, 0, 3)$，满足 \texttt{need[i] <= work}，即 $(2, 1, 0, 3) \leq (5, 11, 4, 2)$，因此可以完成 $P_0$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[0] = (5, 11, 4, 2) + (3, 0, 1, 4) = (8, 11, 5, 6)}，更新 \texttt{finish = (1, 1, 1, 1, 0)}。
+		\end{itemize}
+		
+		\item 第五步：检查进程 $P_4$，其需求为 $(2, 1, 1, 3)$，不满足 \texttt{need[i] <= work}，即 $(2, 1, 1, 3) \nleq (8, 11, 5, 6)$，因此无法完成 $P_4$。
+	\end{enumerate}
+	
+	\item 
+	由于在迭代结束时，\texttt{finish} 不全为 true，系统处于非安全状态。对 $P_4$ 的请求可能导致死锁，因此该系统是非安全的。
+\end{enumerate}
+
+\subsubsection{b小问}
+
+\begin{enumerate}
+	\item 计算需求矩阵（need = max - allocation）：
+	
+	$$
+	\begin{array}{|c|c|c|c|c|}
+		\hline
+		& A & B & C & D \\
+		\hline
+		P_0 & 2 & 1 & 0 & 3 \\
+		\hline
+		P_1 & 1 & 0 & 0 & 1 \\
+		\hline
+		P_2 & 0 & 2 & 0 & 0 \\
+		\hline
+		P_3 & 4 & 1 & 0 & 2 \\
+		\hline
+		P_4 & 2 & 1 & 1 & 3 \\
+		\hline
+	\end{array}
+	$$
+	
+	\item 
+	初始化 \texttt{work = available = (1, 0, 0, 2)}，\texttt{finish = (0, 0, 0, 0, 0)}，表示所有进程都未完成。
+	
+	\item 
+	依次检查进程是否能完成：
+	
+	\begin{enumerate}
+		\item 第一步：检查进程 $P_1$，其需求为 $(1, 0, 0, 1)$，满足 \texttt{need[i] <= work}，即 $(1, 0, 0, 1) \leq (1, 0, 0, 2)$，因此可以完成 $P_1$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[1] = (1, 0, 0, 2) + (2, 2, 1, 0) = (3, 2, 1, 2)}，更新 \texttt{finish = (0, 1, 0, 0, 0)}。
+		\end{itemize}
+		
+		\item 第二步：检查进程 $P_0$，其需求为 $(2, 1, 0, 3)$，满足 \texttt{need[i] <= work}，即 $(2, 1, 0, 3) \leq (3, 2, 1, 2)$，因此可以完成 $P_0$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[0] = (3, 2, 1, 2) + (3, 0, 1, 4) = (6, 2, 2, 6)}，更新 \texttt{finish = (1, 1, 0, 0, 0)}。
+		\end{itemize}
+		
+		\item 第三步：检查进程 $P_2$，其需求为 $(0, 2, 0, 0)$，满足 \texttt{need[i] <= work}，即 $(0, 2, 0, 0) \leq (6, 2, 2, 6)$，因此可以完成 $P_2$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[2] = (6, 2, 2, 6) + (3, 1, 2, 1) = (9, 3, 4, 7)}，更新 \texttt{finish = (1, 1, 1, 0, 0)}。
+		\end{itemize}
+		
+		\item 第四步：检查进程 $P_3$，其需求为 $(4, 1, 0, 2)$，满足 \texttt{need[i] <= work}，即 $(4, 1, 0, 2) \leq (9, 3, 4, 7)$，因此可以完成 $P_3$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[3] = (9, 3, 4, 7) + (0, 5, 1, 0) = (9, 8, 5, 7)}，更新 \texttt{finish = (1, 1, 1, 1, 0)}。
+		\end{itemize}
+		
+		\item 第五步：检查进程 $P_4$，其需求为 $(2, 1, 1, 3)$，满足 \texttt{need[i] <= work}，即 $(2, 1, 1, 3) \leq (9, 8, 5, 7)$，因此可以完成 $P_4$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[4] = (9, 8, 5, 7) + (4, 2, 1, 2) = (13, 10, 6, 9)}，更新 \texttt{finish = (1, 1, 1, 1, 1)}。
+		\end{itemize}
+		
+		\item 
+		所有进程都能够完成，\texttt{finish} 全部为 true，因此该系统是安全的。
+	\end{enumerate}
+	
+	\textbf{安全序列：} $P_1, P_0, P_2, P_3, P_4$
+\end{enumerate}
+
+\section{问题7.13}
+
+\subsection{题目}
+
+假设一个系统具有如下的快照：
+
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		Process & \multicolumn{4}{|c|}{Allocation} & \multicolumn{4}{|c|}{Max} & \multicolumn{4}{|c|}{Available} \\
+		\cline{2-13}
+		& A & B & C & D & A & B & C & D & A & B & C & D \\
+		\hline
+		$P_0$      & 2 & 0 & 0 & 1 & 4 & 2 & 1 & 2 & & & & \\
+		\hline
+		$P_1$      & 3 & 1 & 2 & 1 & 5 & 2 & 5 & 2 & & & & \\
+		\hline
+		$P_2$      & 2 & 1 & 0 & 3 & 2 & 3 & 1 & 6 & & & & \\
+		\hline
+		$P_3$      & 1 & 3 & 1 & 2 & 1 & 4 & 2 & 4 & & & & \\
+		\hline
+		$P_4$      & 1 & 4 & 3 & 2 & 3 & 6 & 6 & 5 & & & & \\
+		\hline
+	\end{tabular}
+\end{center}
+
+采用银行家算法，回答下面的问题：
+a. 通过进程可以完成执行的顺序，说明系统处于安全状态。
+b. 当进程 $P_1$ 的请求为 $(1, 1, 0, 0)$ 时，能否立即允许这一请求？
+c. 当进程 $P_4$ 的请求为 $(0, 0, 2, 0)$ 时，能否立即允许这一请求？
+
+\subsection{解答}
+
+\subsubsection{a小问}
+
+\begin{enumerate}
+	\item 初始化 \texttt{work = available = (3, 3, 2, 1)}，\texttt{finish = (0, 0, 0, 0, 0)}，表示所有进程都未完成。
+	
+	\item 依次检查进程是否能完成：
+	
+	\begin{enumerate}
+		\item 第一步：检查进程 $P_0$，其需求为 \texttt{need[0]}，满足 \texttt{need[0] <= work}，因此可以完成 $P_0$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[0] = (3, 3, 2, 1) + (2, 0, 0, 1) = (5, 3, 2, 2)}，更新 \texttt{finish = (1, 0, 0, 0, 0)}。
+		\end{itemize}
+		
+		\item 第二步：检查进程 $P_3$，其需求为 \texttt{need[3]}，满足 \texttt{need[3] <= work}，因此可以完成 $P_3$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[3] = (5, 3, 2, 2) + (1, 3, 1, 2) = (6, 6, 3, 4)}，更新 \texttt{finish = (1, 0, 0, 1, 0)}。
+		\end{itemize}
+		
+		\item 第三步：检查进程 $P_1$，其需求为 \texttt{need[1]}，满足 \texttt{need[1] <= work}，因此可以完成 $P_1$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[1] = (6, 6, 3, 4) + (3, 1, 2, 1) = (9, 7, 5, 5)}，更新 \texttt{finish = (1, 1, 0, 1, 0)}。
+		\end{itemize}
+		
+		\item 第四步：检查进程 $P_2$，其需求为 \texttt{need[2]}，满足 \texttt{need[2] <= work}，因此可以完成 $P_2$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[2] = (9, 7, 5, 5) + (2, 1, 0, 3) = (11, 8, 5, 8)}，更新 \texttt{finish = (1, 1, 1, 1, 0)}。
+		\end{itemize}
+		
+		\item 第五步：检查进程 $P_4$，其需求为 \texttt{need[4]}，满足 \texttt{need[4] <= work}，因此可以完成 $P_4$。
+		\begin{itemize}
+			\item 更新 \texttt{work = work + allocation[4] = (11, 8, 5, 8) + (1, 4, 3, 2) = (12, 12, 8, 10)}，更新 \texttt{finish = (1, 1, 1, 1, 1)}。
+		\end{itemize}
+		
+		\item 
+		迭代结束，\texttt{finish} 对所有进程均为 true，系统处于安全状态。一个可完成的进程执行顺序为 \textbf{<P0, P3, P1, P2, P4>}。
+	\end{enumerate}
+\end{enumerate}
+
+\subsubsection{b小问}
+
+\begin{enumerate}
+	\item 检查进程 $P_1$ 的请求 \texttt{request[1] = (1, 1, 0, 0)}，满足 \texttt{request[1] <= need[1]} 和 \texttt{request[1] <= available}。
+	\begin{itemize}
+		\item 更新 \texttt{available = available - request[1] = (2, 2, 2, 1)}。
+		\item 更新 \texttt{allocation[1] = allocation[1] + request[1] = (4, 2, 2, 1)}。
+		\item 更新 \texttt{need[1] = need[1] - request[1] = (1, 0, 3, 1)}。
+	\end{itemize}
+	\item 修改状态后，经检验系统仍为安全状态，则请求可被立刻允许。
+\end{enumerate}
+
+\subsubsection{c小问}
+
+\begin{enumerate}
+	\item 检查进程 $P_4$ 的请求 \texttt{request[4] = (0, 0, 2, 0)}，满足 \texttt{request[4] <= need[4]} 和 \texttt{request[4] <= available}。
+	\begin{itemize}
+		\item 更新 \texttt{available = available - request[4] = (3, 3, 0, 1)}。
+		\item 更新 \texttt{allocation[4] = allocation[4] + request[4] = (1, 4, 5, 2)}。
+		\item 更新 \texttt{need[4] = need[4] - request[4] = (2, 2, 1, 3)}。
+	\end{itemize}
+	\item 修改状态后，经检验系统为非安全状态（安全算法第一步就无法找到 i 使得 \texttt{need[i] <= work = available}），则该请求不能立刻被允许，进程 $P_4$ 应该等待该请求且系统恢复到原来的资源分配状态。
+\end{enumerate}
+
+\end{document}
