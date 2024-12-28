@@ -142,9 +142,6 @@ void list_splice (struct list_elem *before,
                   struct list_elem *first, struct list_elem *last);
 void list_push_front (struct list *, struct list_elem *);
 void list_push_back (struct list *, struct list_elem *);
-// 优先队列插入
-// void list_less_func(struct list_elem *elem, struct list *list, void *aux)
-// void list_insert_ordered (struct list *, struct list_elem *, list_less_func *, void *);
 
 /** List removal. */
 struct list_elem *list_remove (struct list_elem *);
@@ -168,9 +165,6 @@ void list_reverse (struct list *);
 typedef bool list_less_func (const struct list_elem *a,
                              const struct list_elem *b,
                              void *aux);
-// aux传入一个NULL即可
-
-// typedef bool (*list_less_func) (const struct list_elem *, const struct list_elem *, void *);
 
 /** Operations on lists with ordered elements. */
 void list_sort (struct list *,

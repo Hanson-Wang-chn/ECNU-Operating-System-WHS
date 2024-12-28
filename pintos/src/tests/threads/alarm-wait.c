@@ -58,13 +58,11 @@ test_sleep (int thread_cnt, int iterations)
 
   /* This test does not work with the MLFQS. */
   ASSERT (!thread_mlfqs);
-
   msg ("Creating %d threads to sleep %d times each.", thread_cnt, iterations);
   msg ("Thread 0 sleeps 10 ticks each time,");
   msg ("thread 1 sleeps 20 ticks each time, and so on.");
   msg ("If successful, product of iteration count and");
   msg ("sleep duration will appear in nondescending order.");
-
   /* Allocate memory. */
   threads = malloc (sizeof *threads * thread_cnt);
   output = malloc (sizeof *output * iterations * thread_cnt * 2);
@@ -88,14 +86,12 @@ test_sleep (int thread_cnt, int iterations)
       t->id = i;
       t->duration = (i + 1) * 10;
       t->iterations = 0;
-
       snprintf (name, sizeof name, "thread %d", i);
       thread_create (name, PRI_DEFAULT, sleeper, t);
     }
   
   /* Wait long enough for all the threads to finish. */
   timer_sleep (100 + thread_cnt * iterations * 10 + 100);
-
   /* Acquire the output lock in case some rogue thread is still
      running. */
   lock_acquire (&test.output_lock);

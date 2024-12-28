@@ -213,38 +213,11 @@ list_push_front (struct list *list, struct list_elem *elem)
 
 /** Inserts ELEM at the end of LIST, so that it becomes the
    back in LIST. */
-
 void
 list_push_back (struct list *list, struct list_elem *elem)
-// 把FIFO的队列修改为优先队列
 {
   list_insert (list_end (list), elem);
 }
-
-// bool
-// list_less_func(struct list_elem *elem_i, struct list_elem *elem_o, void *aux)
-// {
-//   struct thread *thread_i = list_entry(elem_i, struct thread, elem);
-//   struct thread *thread_o = list_entry(elem_o, struct thread, elem);
-
-//   return thread_i->priority > thread_o->priority;
-// }
-
-// void
-// list_insert_ordered (struct list *list, struct list_elem *elem, list_less_func *less, void *aux)
-// {
-//   struct list_elem *e;
-
-//   ASSERT (list != NULL);
-//   ASSERT (elem != NULL);
-//   ASSERT (less != NULL);
-
-//   for (e = list_begin(list); e != list_end(list); e = list_next(e)) {
-//     if (less(elem, list, aux))
-//       break;
-//   }
-//   return list_insert(e, elem);
-// }
 
 /** Removes ELEM from its list and returns the element that
    followed it.  Undefined behavior if ELEM is not in a list.

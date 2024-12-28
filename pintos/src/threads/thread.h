@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/synch.h"
 
 /** States in a thread's life cycle. */
 enum thread_status
@@ -90,17 +91,52 @@ struct thread
     int priority;                       /**< Priority. */
     struct list_elem allelem;           /**< List element for all threads list. */
 
+    struct list_elem waitelem;
+    int64_t wake_tick;
+
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /**< List element. */
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /**< Page directory. */
+
+    struct list child_list;
+    struct exit_info *linked_exit;
+    struct semaphore sema_wait;
+    struct semaphore sema_exec;
+    bool exec_success;
+
+    struct list file_list;
+    uint32_t file_index;
+    struct file* exec_file;
+
 #endif
 
     /* Owned by thread.c. */
     unsigned magic;                     /**< Detects stack overflow. */
   };
+
+struct lock filesys_lock;
+struct exit_info
+{
+    tid_t tid;
+    struct thread* linked_thread;
+    struct thread* parent;
+    int exit_code;
+    bool is_still_alive;
+    bool is_being_waited;
+
+    struct list_elem child_elem;
+};
+
+struct file_info
+{
+   int fd;
+   struct file* f;
+   struct list_elem elem;
+};
+
 
 /** If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
@@ -118,11 +154,14 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 
 void thread_block (void);
 void thread_unblock (struct thread *);
+void thread_wait(int64_t ticks);
+bool thread_unwait();
 
 struct thread *thread_current (void);
 tid_t thread_tid (void);
 const char *thread_name (void);
 
+void error_exit(void);
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
 
@@ -137,7 +176,5 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
-
-bool prio_cmp_fun(struct list_elem *elem_i, struct list_elem *elem_e, void *add_debug_prefix_map);
 
 #endif /**< threads/thread.h */

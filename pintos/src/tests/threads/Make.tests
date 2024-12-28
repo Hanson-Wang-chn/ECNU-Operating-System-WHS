@@ -2,9 +2,10 @@
 
 # Test names.
 tests/threads_TESTS = $(addprefix tests/threads/,alarm-single		\
-hello-world \
+helloworld \
 alarm-multiple alarm-simultaneous alarm-priority alarm-zero		\
 alarm-negative priority-change priority-donate-one			\
+priority-alarm \
 priority-donate-multiple priority-donate-multiple2			\
 priority-donate-nest priority-donate-sema priority-donate-lower		\
 priority-fifo priority-preempt priority-sema priority-condvar		\
@@ -14,7 +15,8 @@ mlfqs-fair-20 mlfqs-nice-2 mlfqs-nice-10 mlfqs-block)
 
 # Sources for tests.
 tests/threads_SRC  = tests/threads/tests.c
-tests/threads_SRC += tests/threads/hello-world.c
+tests/threads_SRC += tests/threads/helloworld.c
+tests/threads_SRC += tests/threads/priority-alarm.c
 tests/threads_SRC += tests/threads/alarm-wait.c
 tests/threads_SRC += tests/threads/alarm-simultaneous.c
 tests/threads_SRC += tests/threads/alarm-priority.c

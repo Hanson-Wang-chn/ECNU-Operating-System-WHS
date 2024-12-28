@@ -28,21 +28,59 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
-  char *fn_copy;
+  char *fn_copy, *name_copy;
   tid_t tid;
 
-  /* Make a copy of FILE_NAME.
-     Otherwise there's a race between the caller and load(). */
-  fn_copy = palloc_get_page (0);
-  if (fn_copy == NULL)
+  fn_copy = palloc_get_page(0);
+  name_copy = palloc_get_page(0);
+  if (fn_copy == NULL || name_copy == NULL) 
     return TID_ERROR;
-  strlcpy (fn_copy, file_name, PGSIZE);
 
-  /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  strlcpy (fn_copy, file_name, PGSIZE);
+  strlcpy (name_copy, file_name, PGSIZE);
+
+  char *save_ptr;
+  name_copy = strtok_r(name_copy, " ", &save_ptr);  
+
+  tid = thread_create (name_copy, PRI_DEFAULT, start_process, fn_copy);
+
+  palloc_free_page(name_copy);
+
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
+
+  struct thread* cur = thread_current();
+  sema_down(&cur->sema_exec);
+  if (!cur->exec_success) return TID_ERROR;
+
   return tid;
+}
+
+void push_argument(void **esp, char *cmd)
+{
+  int argc = 0, argv[64];
+  char *token, *save_ptr; 
+
+  (*esp) = PHYS_BASE;
+
+  for (token = strtok_r(cmd, " ", &save_ptr); token != NULL;
+       token = strtok_r(NULL, " ", &save_ptr))
+  {
+    size_t len = strlen(token);
+    (*esp) -= (len + 1);
+    memcpy((*esp), token, len + 1);
+    argv[argc++] = (*esp);
+  }
+
+  (*esp) = (int)(*esp) & 0xfffffffc;  // word_align
+  (*esp) -= 4, (*(int *)(*esp)) = 0;  // argv[argc]
+
+  for (int i = argc - 1; i >= 0; i--) // argv[i];
+    (*esp) -= 4, (*(int *)(*esp)) = argv[i];
+
+  (*esp) -= 4, (*(int*)(*esp)) = (*esp) + 4; // argv
+  (*esp) -= 4, (*(int*)(*esp)) = argc;       // argc
+  (*esp) -= 4, (*(int*)(*esp)) = 0;          // return address
 }
 
 /** A thread function that loads a user process and starts it
@@ -59,21 +97,50 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (file_name, &if_.eip, &if_.esp);
 
-  /* If load failed, quit. */
-  palloc_free_page (file_name);
-  if (!success) 
-    thread_exit ();
+  struct thread *cur = thread_current();
 
-  /* Start the user process by simulating a return from an
-     interrupt, implemented by intr_exit (in
-     threads/intr-stubs.S).  Because intr_exit takes all of its
-     arguments on the stack in the form of a `struct intr_frame',
-     we just point the stack pointer (%esp) to our stack frame
-     and jump to it. */
-  asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
-  NOT_REACHED ();
+  char *cmd = palloc_get_page(0);
+  if (cmd != NULL)
+  {
+    strlcpy(cmd, file_name_, PGSIZE);
+
+    char *save_ptr;
+    file_name = strtok_r(file_name, " ", &save_ptr);
+    
+    lock_acquire(&filesys_lock);
+    success = load (file_name, &if_.eip, &if_.esp);
+    if (success)
+    {
+      struct file *f = filesys_open(file_name);
+      cur->exec_file = f;
+      file_deny_write(f);
+    }
+    lock_release(&filesys_lock);
+
+    if (success)
+    {
+      push_argument(&if_.esp, cmd);
+      palloc_free_page(cmd);
+      palloc_free_page(file_name);
+      cur->linked_exit->parent->exec_success = true;
+      sema_up(&cur->linked_exit->parent->sema_exec);
+      /* Start the user process by simulating a return from an
+      interrupt, implemented by intr_exit (in
+      threads/intr-stubs.S).  Because intr_exit takes all of its
+      arguments on the stack in the form of a `struct intr_frame',
+      we just point the stack pointer (%esp) to our stack frame
+      and jump to it. */
+      asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
+      NOT_REACHED ();
+    }
+    palloc_free_page(cmd);
+  }
+
+  palloc_free_page(file_name);
+  cur->linked_exit->parent->exec_success = false;
+  sema_up(&cur->linked_exit->parent->sema_exec);
+  error_exit();  
 }
 
 /** Waits for thread TID to die and returns its exit status.  If
@@ -88,7 +155,27 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  return -1;
+  struct thread *cur = thread_current ();
+
+  struct list* l = &cur->child_list;
+  struct list_elem* e = NULL;
+  struct exit_info *child;
+  for (e = list_begin(l); e != list_end(l); e = list_next(e))
+  {
+    child = list_entry(e, struct exit_info, child_elem);
+    if (child->tid == child_tid) break;
+  }
+
+  if (e == list_end(l)) return -1;
+  list_remove(e);
+
+  if (child->is_still_alive)
+  {
+    child->is_being_waited = true;
+    sema_down(&child->linked_thread->sema_wait);
+  }
+
+  return child->exit_code;
 }
 
 /** Free the current process's resources. */
@@ -98,22 +185,52 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
-  /* Destroy the current process's page directory and switch back
-     to the kernel-only page directory. */
+  struct list* l = &cur->child_list;
+  struct list_elem* e;
+  for (e = list_begin(l); e != list_end(l); e = list_next(e))
+  {
+    struct exit_info *tmp = list_entry(e, struct exit_info, child_elem);
+    if (tmp->is_still_alive)
+      tmp->linked_thread->linked_exit->parent = NULL;
+  }
+
+  if (cur->linked_exit->parent == NULL) free(cur->linked_exit);
+  else 
+  {
+    if (cur->linked_exit->is_being_waited)
+      sema_up(&cur->sema_wait);
+
+    cur->linked_exit->is_still_alive = false;
+    cur->linked_exit->linked_thread = NULL;
+  }
+
   pd = cur->pagedir;
   if (pd != NULL) 
     {
-      /* Correct ordering here is crucial.  We must set
-         cur->pagedir to NULL before switching page directories,
-         so that a timer interrupt can't switch back to the
-         process page directory.  We must activate the base page
-         directory before destroying the process's page
-         directory, or our active page directory will be one
-         that's been freed (and cleared). */
       cur->pagedir = NULL;
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  
+  while (!list_empty(&cur->file_list))
+  {
+    e = list_pop_front(&cur->file_list);
+    struct file_info* tmp = list_entry(e, struct file_info, elem);
+    lock_acquire(&filesys_lock);
+    file_close(tmp->f);
+    lock_release(&filesys_lock);
+    free(tmp);
+  }
+
+  if (cur->exec_file != NULL)
+  {
+    lock_acquire(&filesys_lock);
+    file_allow_write(cur->exec_file);
+    file_close(cur->exec_file);
+    lock_release(&filesys_lock);
+  }
+
+  printf("%s: exit(%d)\n", cur->name, cur->linked_exit->exit_code);
 }
 
 /** Sets up the CPU for running user code in the current
